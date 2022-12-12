@@ -1,4 +1,4 @@
-from Cryptodome.Cipher import AES, DES, ARC2
+from Cryptodome.Cipher import AES, DES, ARC2, CAST
 import config
 
 def encryptAES(key, data_bytes):
@@ -94,3 +94,32 @@ def roundRobinDecrypt(encryptedFilename, keyAES, keyDES, keyRC2):
             break
     encryptedFile.close()
     decryptedFile.close()
+
+
+def encryptCAST_128(key, data_bytes):
+    cipher = CAST.new(key, CAST.MODE_EAX)
+    nonce = cipher.nonce
+    cipherText, tag = cipher.encrypt_and_digest(data_bytes)
+    return cipherText, nonce
+
+
+def decryptCAST_128(key, cipherText, nonce):
+    cipher = CAST.new(key, CAST.MODE_EAX, nonce = nonce)
+    plainText = cipher.decrypt(cipherText)
+    return plainText
+
+def getEncryptedKeysFile(masterKey, dataBytes):
+    fileEncryptedKeys = open("encryptedKeys.txt", 'wb')
+    cipherText, nonce = encryptCAST_128(masterKey, dataBytes)
+    [fileEncryptedKeys.write(x) for x in (nonce, cipherText)]
+    fileEncryptedKeys.close()
+    return "encryptedKeys.txt"
+
+def decryptKeysFile(filename, masterKey):
+    fileEncryptedKeysDownloaded = open(filename, 'rb')
+    nonce, readCipherText = [fileEncryptedKeysDownloaded.read(x) for x in (16, config.BLOCK_SIZE)]
+    plainText = decryptCAST_128(masterKey, readCipherText, nonce)
+    key1Decrypted = plainText[0:config.AES_KEY_SIZE_BYTES]
+    key2Decrypted = plainText[config.AES_KEY_SIZE_BYTES : config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES]
+    key3Decrypted = plainText[config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES : config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES + config.CAST_128_KEY_SIZE_BYTES]
+    return key1Decrypted, key2Decrypted, key3Decrypted

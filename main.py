@@ -11,14 +11,19 @@ if __name__ == '__main__':
     key1 = token_bytes(config.AES_KEY_SIZE_BYTES)
     key2 = token_bytes(config.DES_KEY_SIZE_BYTES)
     key3 = token_bytes(config.RC2_KEY_SIZE_BYTES)
+    masterKey = token_bytes(config.CAST_128_KEY_SIZE_BYTES)
 
 
-    file = myCrypto.roundRobinEncrypt("img.jpg", key1, key2, key3)
-    myftp.upload(file)
+    dataFileEncrypted = myCrypto.roundRobinEncrypt("img.jpg", key1, key2, key3)
+    keyFileEncrypted = myCrypto.getEncryptedKeysFile(masterKey, key1+key2+key3)
+    myftp.upload(dataFileEncrypted)
+    myftp.upload(keyFileEncrypted)
 
 
-    myftp.download(file)
-    file = myCrypto.roundRobinDecrypt(file, key1, key2, key3)
+    myftp.download(dataFileEncrypted)
+    myftp.download(keyFileEncrypted)
+    key1Decrypted, key2Decrypted, key3Decrypted = myCrypto.decryptKeysFile(keyFileEncrypted, masterKey)
+    file = myCrypto.roundRobinDecrypt(dataFileEncrypted, key1Decrypted, key2Decrypted, key3Decrypted)
 
 
 
