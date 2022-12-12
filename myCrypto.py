@@ -50,7 +50,8 @@ def decryptRC2(key, cipherText, nonce):
 
 def roundRobinEncrypt(filename, keyAES, keyDES, keyRC2, blockSize):
     file = open(filename, 'rb')
-    fileEncrypted = open("encrypted.jpg", 'wb')
+    fileEncryptedName = "encrypted_"+filename
+    fileEncrypted = open(fileEncryptedName, 'wb')
     count = 0
     while (True):
         nBytes = file.read(blockSize)
@@ -73,12 +74,13 @@ def roundRobinEncrypt(filename, keyAES, keyDES, keyRC2, blockSize):
             break
     file.close()
     fileEncrypted.close()
-    return "encrypted.jpg"
+    return fileEncryptedName
 
 
 def roundRobinDecrypt(encryptedFilename, keyAES, keyDES, keyRC2, blockSize):
     encryptedFile= open(encryptedFilename, 'rb')
-    decryptedFile = open("decrypted.jpg", 'wb')
+    decryptedFileName = "de"+encryptedFilename[2:]
+    decryptedFile = open(decryptedFileName, 'wb')
     count = 0
     while (True):
         nonce, readCipherText = [encryptedFile.read(x) for x in (16, blockSize)]
@@ -116,12 +118,13 @@ def decryptCAST_128(key, cipherText, nonce):
     return plainText
 
 
-def getEncryptedKeysFile(masterKey, dataBytes):
-    fileEncryptedKeys = open("encryptedKeys.txt", 'wb')
+def getEncryptedKeysFile(filename,masterKey, dataBytes):
+    fileEncryptedKeysName = "encrypted_keys_"+filename[:-4]+".txt"
+    fileEncryptedKeys = open(fileEncryptedKeysName, 'wb')
     cipherText, nonce = encryptCAST_128(masterKey, dataBytes)
     [fileEncryptedKeys.write(x) for x in (nonce, cipherText)]
     fileEncryptedKeys.close()
-    return "encryptedKeys.txt"
+    return fileEncryptedKeysName
 
 
 def decryptKeysFile(filename, masterKey):
@@ -135,11 +138,12 @@ def decryptKeysFile(filename, masterKey):
     return key1Decrypted, key2Decrypted, key3Decrypted, int.from_bytes(blockSizeDecrypted, "big")
 
 
-def storeLocally(masterKey):
-    f = open("masterKey.txt", 'wb')
+def storeLocally(filename, masterKey):
+    fName= "master_key_"+filename[:-4]+".txt"
+    f = open(fName, 'wb')
     f.write(masterKey)
     f.close()
-    return "masterKey.txt"
+    return fName
 
 
 def encryptRSA(publicKey, dataBytes):
@@ -150,15 +154,16 @@ def decryptRSA(privateKey, cipherText):
     return rsa.decrypt(cipherText, privateKey)
 
 
-def getMasterKeyFileEncrypted(userPublicKey):
-    f = open("masterKey.txt", "rb")
+def getMasterKeyFileEncrypted(filename, userPublicKey):
+    f = open("master_key_"+filename[:-4]+".txt", "rb")
     dataBytes = f.read()
     cipherText = encryptRSA(userPublicKey, dataBytes)
     f.close()
-    f = open("masterKeyEncrypted.txt", "wb")
+    fname = "encrypted_master_key_"+filename[:-4]+".txt"
+    f = open(fname, "wb")
     f.write(cipherText)
     f.close()
-    return "masterKeyEncrypted.txt"
+    return fname
 
 
 def decryptMasterKeyFile(filename, privateKey):
