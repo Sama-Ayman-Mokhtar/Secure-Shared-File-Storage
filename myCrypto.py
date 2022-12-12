@@ -2,6 +2,13 @@ from Cryptodome.Cipher import AES, DES, ARC2, CAST
 import config
 import rsa
 
+def getBlockSize(filename):
+    f = open(filename, "rb")
+    dataBytes = f.read()
+    sizeOfileInBytes = len((dataBytes))
+    #can overflow (tested up to 1.5 GB file)
+    return int(sizeOfileInBytes / 100)
+
 def encryptAES(key, data_bytes):
     cipher = AES.new(key, AES.MODE_EAX)
     nonce = cipher.nonce
@@ -41,12 +48,12 @@ def decryptRC2(key, cipherText, nonce):
     return plainText
 
 
-def roundRobinEncrypt(filename, keyAES, keyDES, keyRC2):
+def roundRobinEncrypt(filename, keyAES, keyDES, keyRC2, blockSize):
     file = open(filename, 'rb')
     fileEncrypted = open("encrypted.jpg", 'wb')
     count = 0
     while (True):
-        nBytes = file.read(config.BLOCK_SIZE)
+        nBytes = file.read(blockSize)
         if (nBytes):
             if(count == 3):
                 count = 0
@@ -69,12 +76,12 @@ def roundRobinEncrypt(filename, keyAES, keyDES, keyRC2):
     return "encrypted.jpg"
 
 
-def roundRobinDecrypt(encryptedFilename, keyAES, keyDES, keyRC2):
+def roundRobinDecrypt(encryptedFilename, keyAES, keyDES, keyRC2, blockSize):
     encryptedFile= open(encryptedFilename, 'rb')
     decryptedFile = open("decrypted.jpg", 'wb')
     count = 0
     while (True):
-        nonce, readCipherText = [encryptedFile.read(x) for x in (16, config.BLOCK_SIZE)]
+        nonce, readCipherText = [encryptedFile.read(x) for x in (16, blockSize)]
         if (readCipherText):
             if (count == 3):
                 count = 0
@@ -119,12 +126,13 @@ def getEncryptedKeysFile(masterKey, dataBytes):
 
 def decryptKeysFile(filename, masterKey):
     fileEncryptedKeysDownloaded = open(filename, 'rb')
-    nonce, readCipherText = [fileEncryptedKeysDownloaded.read(x) for x in (16, config.BLOCK_SIZE)]
+    nonce, readCipherText = [fileEncryptedKeysDownloaded.read(x) for x in (16, -1)]
     plainText = decryptCAST_128(masterKey, readCipherText, nonce)
     key1Decrypted = plainText[0:config.AES_KEY_SIZE_BYTES]
     key2Decrypted = plainText[config.AES_KEY_SIZE_BYTES : config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES]
-    key3Decrypted = plainText[config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES : config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES + config.CAST_128_KEY_SIZE_BYTES]
-    return key1Decrypted, key2Decrypted, key3Decrypted
+    key3Decrypted = plainText[config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES : config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES + config.RC2_KEY_SIZE_BYTES]
+    blockSizeDecrypted = plainText[config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES + config.RC2_KEY_SIZE_BYTES :]
+    return key1Decrypted, key2Decrypted, key3Decrypted, int.from_bytes(blockSizeDecrypted, "big")
 
 
 def storeLocally(masterKey):
@@ -159,7 +167,4 @@ def decryptMasterKeyFile(filename, privateKey):
     f.close()
     plainText = decryptRSA(privateKey, cipherText)
     return plainText
-
-
-
 
