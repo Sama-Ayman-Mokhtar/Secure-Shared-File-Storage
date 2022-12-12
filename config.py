@@ -9,5 +9,4 @@ AES_KEY_SIZE_BYTES = 16
 DES_KEY_SIZE_BYTES = 8
 RC2_KEY_SIZE_BYTES = 8
 CAST_128_KEY_SIZE_BYTES = 16
-#TODO: dynamically determine it based on file size
 BLOCK_SIZE = 500

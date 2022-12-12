@@ -1,8 +1,14 @@
-import threading
-import config
+import rsa
 import myftp
-from secrets import token_bytes
+import config
 import myCrypto
+import threading
+from secrets import token_bytes
+
+#TODO: GUI
+#TODO: handle file naming
+#TODO: handle file extentions
+#TODO: dynamically determine blocksize based on file size
 
 if __name__ == '__main__':
     thread = threading.Thread(target=myftp.runFTPserver)
@@ -18,10 +24,14 @@ if __name__ == '__main__':
     keyFileEncrypted = myCrypto.getEncryptedKeysFile(masterKey, key1+key2+key3)
     myftp.upload(dataFileEncrypted)
     myftp.upload(keyFileEncrypted)
+    localMasterKeyFile = myCrypto.storeLocally(masterKey)
 
 
+    (userPublicKey, userPrivateKey) = rsa.newkeys(1024)
+    masterKeyFileEncrypted = myCrypto.getMasterKeyFileEncrypted(userPublicKey)
     myftp.download(dataFileEncrypted)
     myftp.download(keyFileEncrypted)
+    masterKey = myCrypto.decryptMasterKeyFile(masterKeyFileEncrypted, userPrivateKey)
     key1Decrypted, key2Decrypted, key3Decrypted = myCrypto.decryptKeysFile(keyFileEncrypted, masterKey)
     file = myCrypto.roundRobinDecrypt(dataFileEncrypted, key1Decrypted, key2Decrypted, key3Decrypted)
 

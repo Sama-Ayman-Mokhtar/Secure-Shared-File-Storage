@@ -1,5 +1,6 @@
 from Cryptodome.Cipher import AES, DES, ARC2, CAST
 import config
+import rsa
 
 def encryptAES(key, data_bytes):
     cipher = AES.new(key, AES.MODE_EAX)
@@ -68,7 +69,6 @@ def roundRobinEncrypt(filename, keyAES, keyDES, keyRC2):
     return "encrypted.jpg"
 
 
-#TODO: handle file extentions
 def roundRobinDecrypt(encryptedFilename, keyAES, keyDES, keyRC2):
     encryptedFile= open(encryptedFilename, 'rb')
     decryptedFile = open("decrypted.jpg", 'wb')
@@ -108,12 +108,14 @@ def decryptCAST_128(key, cipherText, nonce):
     plainText = cipher.decrypt(cipherText)
     return plainText
 
+
 def getEncryptedKeysFile(masterKey, dataBytes):
     fileEncryptedKeys = open("encryptedKeys.txt", 'wb')
     cipherText, nonce = encryptCAST_128(masterKey, dataBytes)
     [fileEncryptedKeys.write(x) for x in (nonce, cipherText)]
     fileEncryptedKeys.close()
     return "encryptedKeys.txt"
+
 
 def decryptKeysFile(filename, masterKey):
     fileEncryptedKeysDownloaded = open(filename, 'rb')
@@ -123,3 +125,41 @@ def decryptKeysFile(filename, masterKey):
     key2Decrypted = plainText[config.AES_KEY_SIZE_BYTES : config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES]
     key3Decrypted = plainText[config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES : config.AES_KEY_SIZE_BYTES + config.DES_KEY_SIZE_BYTES + config.CAST_128_KEY_SIZE_BYTES]
     return key1Decrypted, key2Decrypted, key3Decrypted
+
+
+def storeLocally(masterKey):
+    f = open("masterKey.txt", 'wb')
+    f.write(masterKey)
+    f.close()
+    return "masterKey.txt"
+
+
+def encryptRSA(publicKey, dataBytes):
+    return rsa.encrypt(dataBytes, publicKey)
+
+
+def decryptRSA(privateKey, cipherText):
+    return rsa.decrypt(cipherText, privateKey)
+
+
+def getMasterKeyFileEncrypted(userPublicKey):
+    f = open("masterKey.txt", "rb")
+    dataBytes = f.read()
+    cipherText = encryptRSA(userPublicKey, dataBytes)
+    f.close()
+    f = open("masterKeyEncrypted.txt", "wb")
+    f.write(cipherText)
+    f.close()
+    return "masterKeyEncrypted.txt"
+
+
+def decryptMasterKeyFile(filename, privateKey):
+    f = open(filename, "rb")
+    cipherText = f.read()
+    f.close()
+    plainText = decryptRSA(privateKey, cipherText)
+    return plainText
+
+
+
+
