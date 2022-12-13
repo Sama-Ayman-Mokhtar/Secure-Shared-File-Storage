@@ -103,6 +103,7 @@ def roundRobinDecrypt(encryptedFilename, keyAES, keyDES, keyRC2, blockSize):
             break
     encryptedFile.close()
     decryptedFile.close()
+    return decryptedFileName
 
 
 def encryptCAST_128(key, data_bytes):
