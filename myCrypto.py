@@ -48,8 +48,8 @@ def decryptRC2(key, cipherText, nonce):
     return plainText
 
 
-def roundRobinEncrypt(filename, keyAES, keyDES, keyRC2, blockSize):
-    file = open(filename, 'rb')
+def roundRobinEncrypt(filepath, filename, keyAES, keyDES, keyRC2, blockSize):
+    file = open(filepath, 'rb')
     fileEncryptedName = "encrypted_"+filename
     fileEncrypted = open(fileEncryptedName, 'wb')
     count = 0

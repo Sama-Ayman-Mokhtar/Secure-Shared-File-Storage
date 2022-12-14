@@ -3,7 +3,6 @@ import myftp
 import threading
 
 #TODO: ftp dir
-#TODO: upload
 #TODO: select download
 
 if __name__ == '__main__':

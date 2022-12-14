@@ -6,6 +6,7 @@ import myftp
 import config
 import myCrypto
 from secrets import token_bytes
+from tkinter import filedialog
 
 class NewprojectApp:
     def __init__(self, master=None):
@@ -56,11 +57,13 @@ class NewprojectApp:
     def run(self):
         self.mainwindow.mainloop()
 
-    def upload(self, event=None, filename="img.jpg"):
+    def upload(self, event=None):
+        self.filepath = filedialog.askopenfilename(initialdir="/", title="Choose a file to upload to ftp Server")
+        filename = self.filepath.split('/')[-1]
 
         self.debug_txtArea.configure(state=tk.NORMAL)
 
-        blockSize = myCrypto.getBlockSize(filename)
+        blockSize = myCrypto.getBlockSize(self.filepath)
         self.debug_txtArea.insert(tk.INSERT, "[key] generated AES key: {} bytes long\n".format(config.AES_KEY_SIZE_BYTES))
         key1 = token_bytes(config.AES_KEY_SIZE_BYTES)
         self.debug_txtArea.insert(tk.INSERT, "[key] generated DES key: {} bytes long\n".format(config.DES_KEY_SIZE_BYTES))
@@ -71,7 +74,7 @@ class NewprojectApp:
         masterKey = token_bytes(config.CAST_128_KEY_SIZE_BYTES)
 
         self.debug_txtArea.insert(tk.INSERT, "[Encryption] encrypted {} using round robin (AES, DES, RC2)\n".format(filename))
-        dataFileEncrypted = myCrypto.roundRobinEncrypt(filename, key1, key2, key3, blockSize)
+        dataFileEncrypted = myCrypto.roundRobinEncrypt(self.filepath, filename, key1, key2, key3, blockSize)
         self.debug_txtArea.insert(tk.INSERT, "[Encryption] encrypted the three keys and the master key\n")
         keyFileEncrypted = myCrypto.getEncryptedKeysFile(filename, masterKey,
                                                          key1 + key2 + key3 + blockSize.to_bytes(32, 'big'))
