@@ -111,8 +111,6 @@ class NewprojectApp:
         if 'encrypted_' in self.selectedFile:
             filename = self.selectedFile[10:]
 
-        print(filename)
-
         self.debug_txtArea.configure(state=tk.NORMAL)
 
         masterKeyFileEncrypted = myCrypto.getMasterKeyFileEncrypted(filename, self.userPublicKey)
@@ -151,12 +149,12 @@ class NewprojectApp:
 
 
     def fill_ftp_dir(self):
+        self.lst_box.delete(0, tk.END)
         for file in os.listdir("./out"):
             self.lst_box.insert(self.lst_box.size(), file)
 
 
     def setSelectedFile(self, event=None):
-        print(self.lst_box.get(self.lst_box.curselection()[0]))
         self.selectedFile = self.lst_box.get(self.lst_box.curselection()[0])
 
 
