@@ -2,8 +2,8 @@ import gui
 import myftp
 import threading
 
-#TODO: ftp dir
-#TODO: select download
+#TODO: scroll bar
+
 
 if __name__ == '__main__':
     thread = threading.Thread(target=myftp.runFTPserver)

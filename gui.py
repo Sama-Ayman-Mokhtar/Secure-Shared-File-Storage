@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox as mb
+import os
 import rsa
 import myftp
 import config
@@ -28,9 +29,10 @@ class NewprojectApp:
         self.dowload_btn.configure(text='Download', width=30)
         self.dowload_btn.grid(column=2, columnspan=2, row=3)
         self.dowload_btn.bind("<ButtonPress>", self.download, add="+")
-        self.txt_vw = tk.Text(self.frame2)
-        self.txt_vw.configure(height=15, width=50)
-        self.txt_vw.grid(column=0, columnspan=4, padx=20, pady=10, row=1)
+        self.lst_box = tk.Listbox(self.frame2)
+        self.lst_box.configure(height=15, width=70)
+        self.lst_box.grid(column=0, columnspan=4, padx=20, pady=10, row=1)
+        self.lst_box.bind("<<ListboxSelect>>", self.setSelectedFile)
         self.key_vw = ttk.Entry(self.frame2)
         self.key_vw.configure(width=50, state=tk.DISABLED)
         self.key_vw.grid(column=0, columnspan=3, padx=20, pady=10, row=2)
@@ -50,6 +52,8 @@ class NewprojectApp:
         self.debug.grid(column=0, pady=10, row=0)
         self.rightFrame.grid(column=1, ipady=10, row=0)
         self.userPublicKey=''
+        self.selectedFile=''
+        self.fill_ftp_dir()
 
         # Main widget
         self.mainwindow = toplevel1
@@ -87,13 +91,27 @@ class NewprojectApp:
         self.debug_txtArea.insert(tk.INSERT, "[Local] stored {}\n\n".format(localMasterKeyFile))
 
         self.debug_txtArea.configure(state=tk.DISABLED)
+        self.fill_ftp_dir()
 
 
-    def download(self, event=None, filename="img.jpg"):
+    def download(self, event=None):
+
+        if self.selectedFile == '':
+            mb.showinfo("Error", "Select a File from the Ftp Dir to Download!")
+            return
+
+        if 'encrypted_keys_' in self.selectedFile:
+            mb.showinfo("Error", "Don't select a 'KEY' file")
+            return
 
         if self.userPublicKey == '':
             mb.showinfo("Error", "Generate Your Public Key First!")
             return
+
+        if 'encrypted_' in self.selectedFile:
+            filename = self.selectedFile[10:]
+
+        print(filename)
 
         self.debug_txtArea.configure(state=tk.NORMAL)
 
@@ -130,3 +148,15 @@ class NewprojectApp:
 
         self.debug_txtArea.configure(state=tk.DISABLED)
         self.key_vw.configure(state=tk.DISABLED)
+
+
+    def fill_ftp_dir(self):
+        for file in os.listdir("./out"):
+            self.lst_box.insert(self.lst_box.size(), file)
+
+
+    def setSelectedFile(self, event=None):
+        print(self.lst_box.get(self.lst_box.curselection()[0]))
+        self.selectedFile = self.lst_box.get(self.lst_box.curselection()[0])
+
+
